@@ -19,37 +19,34 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class SysRoleService extends ServiceImpl<SysRoleMapper, SysRole> {
-
     private final SysRoleMenuMapper roleMenuMapper;
     private final SysUserRoleMapper userRoleMapper;
 
-    public List<SysRole> listRoles() {
-        return list(new LambdaQueryWrapper<SysRole>().orderByAsc(SysRole::getSortNo));
+    public List<SysRole> listRoles(Long enterpriseId) {
+        return list(new LambdaQueryWrapper<SysRole>().eq(SysRole::getEnterpriseId, enterpriseId)
+                .orderByAsc(SysRole::getSortNo));
+    }
+
+    public SysRole getRole(Long id, Long enterpriseId) {
+        SysRole role = lambdaQuery().eq(SysRole::getId, id).eq(SysRole::getEnterpriseId, enterpriseId).one();
+        if (role == null) throw new BusinessException("角色不存在");
+        return role;
     }
 
     @Transactional
     public SysRole createRole(RoleRequest request, Long enterpriseId, Long operatorId) {
         if (lambdaQuery().eq(SysRole::getRoleCode, request.getRoleCode())
-                .eq(SysRole::getEnterpriseId, enterpriseId).count() > 0) {
-            throw new BusinessException("角色编码已存在");
-        }
+                .eq(SysRole::getEnterpriseId, enterpriseId).count() > 0) throw new BusinessException("角色编码已存在");
         SysRole role = new SysRole();
-        role.setEnterpriseId(enterpriseId);
-        role.setRoleCode(request.getRoleCode());
-        role.setRoleName(request.getRoleName());
+        role.setEnterpriseId(enterpriseId); role.setRoleCode(request.getRoleCode()); role.setRoleName(request.getRoleName());
         role.setDataScope(request.getDataScope() != null ? request.getDataScope() : "SELF");
-        role.setSortNo(request.getSortNo() != null ? request.getSortNo() : 0);
-        role.setStatus("ENABLED");
-        role.setRemark(request.getRemark());
-        role.setCreatedBy(operatorId);
-        save(role);
-        return role;
+        role.setSortNo(request.getSortNo() != null ? request.getSortNo() : 0); role.setStatus("ENABLED");
+        role.setRemark(request.getRemark()); role.setCreatedBy(operatorId); save(role); return role;
     }
 
     @Transactional
-    public void updateRole(Long id, RoleRequest request) {
-        SysRole role = getById(id);
-        if (role == null) throw new BusinessException("角色不存在");
+    public void updateRole(Long id, RoleRequest request, Long enterpriseId) {
+        SysRole role = getRole(id, enterpriseId);
         role.setRoleName(request.getRoleName());
         role.setDataScope(request.getDataScope());
         role.setSortNo(request.getSortNo());
@@ -58,26 +55,27 @@ public class SysRoleService extends ServiceImpl<SysRoleMapper, SysRole> {
     }
 
     @Transactional
-    public void deleteRole(Long id) {
-        SysRole role = getById(id);
-        if (role == null) throw new BusinessException("角色不存在");
-        if (userRoleMapper.selectCount(new LambdaQueryWrapper<SysUserRole>().eq(SysUserRole::getRoleId, id)) > 0) {
+    public void deleteRole(Long id, Long enterpriseId) {
+        getRole(id, enterpriseId);
+        if (userRoleMapper.selectCount(new LambdaQueryWrapper<SysUserRole>().eq(SysUserRole::getRoleId, id)) > 0)
             throw new BusinessException("角色下存在用户，不能删除");
-        }
         removeById(id);
         roleMenuMapper.delete(new LambdaQueryWrapper<SysRoleMenu>().eq(SysRoleMenu::getRoleId, id));
     }
 
     @Transactional
-    public void assignMenus(Long roleId, List<Long> menuIds) {
+    public void assignMenus(Long roleId, List<Long> menuIds, Long enterpriseId) {
+        getRole(roleId, enterpriseId);
         roleMenuMapper.delete(new LambdaQueryWrapper<SysRoleMenu>().eq(SysRoleMenu::getRoleId, roleId));
-        if (menuIds != null && !menuIds.isEmpty()) {
-            for (Long menuId : menuIds) {
-                SysRoleMenu rm = new SysRoleMenu();
-                rm.setRoleId(roleId);
-                rm.setMenuId(menuId);
-                roleMenuMapper.insert(rm);
-            }
-        }
+        if (menuIds != null) menuIds.stream().distinct().forEach(menuId -> {
+            SysRoleMenu relation = new SysRoleMenu(); relation.setRoleId(roleId); relation.setMenuId(menuId);
+            roleMenuMapper.insert(relation);
+        });
+    }
+
+    public List<Long> getRoleMenus(Long roleId, Long enterpriseId) {
+        getRole(roleId, enterpriseId);
+        return roleMenuMapper.selectList(new LambdaQueryWrapper<SysRoleMenu>().eq(SysRoleMenu::getRoleId, roleId))
+                .stream().map(SysRoleMenu::getMenuId).toList();
     }
 }

@@ -28,14 +28,16 @@ public class SupplierController {
             @RequestParam(required = false) String supplierCode,
             @RequestParam(required = false) String supplierName,
             @RequestParam(required = false) String contactPhone,
-            @RequestParam(required = false) String status) {
-        return Result.success(supplierService.pageQuery(page, size, supplierCode, supplierName, contactPhone, status));
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) String status,
+            @AuthenticationPrincipal LoginUser loginUser) {
+        return Result.success(supplierService.pageQuery(loginUser.getEnterpriseId(), page, size, supplierCode, supplierName, contactPhone, categoryId, status));
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('md:supplier:list')")
-    public Result<MdSupplier> detail(@PathVariable Long id) {
-        return Result.success(supplierService.getById(id));
+    public Result<MdSupplier> detail(@PathVariable Long id, @AuthenticationPrincipal LoginUser loginUser) {
+        return Result.success(supplierService.getDetail(id, loginUser.getEnterpriseId()));
     }
 
     @PostMapping
@@ -47,16 +49,17 @@ public class SupplierController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('md:supplier:update')")
-    public Result<Void> update(@PathVariable Long id, @RequestBody MdSupplier supplier) {
+    public Result<Void> update(@PathVariable Long id, @RequestBody MdSupplier supplier,
+                               @AuthenticationPrincipal LoginUser loginUser) {
         supplier.setId(id);
-        supplierService.update(supplier);
+        supplierService.update(supplier, loginUser.getEnterpriseId(), loginUser.getUserId());
         return Result.success();
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('md:supplier:delete')")
-    public Result<Void> delete(@PathVariable Long id) {
-        supplierService.delete(id);
+    public Result<Void> delete(@PathVariable Long id, @AuthenticationPrincipal LoginUser loginUser) {
+        supplierService.delete(id, loginUser.getEnterpriseId());
         return Result.success();
     }
 

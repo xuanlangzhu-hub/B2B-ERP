@@ -22,6 +22,9 @@
         <el-table-column prop="categoryName" label="分类" width="120" />
         <el-table-column prop="specification" label="规格" width="120" />
         <el-table-column prop="unitName" label="单位" width="80" />
+        <el-table-column label="标签" min-width="150"><template #default="{row}">
+          <el-tag v-for="name in row.tagNames || []" :key="name" size="small" class="tag-item">{{ name }}</el-tag>
+        </template></el-table-column>
         <el-table-column prop="purchasePrice" label="采购价" width="100" />
         <el-table-column prop="salePrice" label="销售价" width="100" />
         <el-table-column prop="minStock" label="最低库存" width="100" />
@@ -43,7 +46,7 @@
         :total="total" v-model:current-page="query.page" v-model:page-size="query.size" @change="fetchData" />
     </el-card>
 
-    <el-dialog :title="dialogTitle" v-model="dialogVisible" width="600px">
+    <el-dialog :title="dialogTitle" v-model="dialogVisible" width="min(820px,94vw)" top="4vh">
       <el-form :model="form" :rules="formRules" ref="formRef" label-width="100px">
         <el-row :gutter="16">
           <el-col :span="12">
@@ -78,6 +81,24 @@
           <el-col :span="12">
             <el-form-item label="品牌">
               <el-input v-model="form.brand" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="商品标签">
+              <el-select v-model="form.tagIds" multiple clearable style="width:100%" placeholder="可选择多个标签">
+                <el-option v-for="tag in productTags" :key="tag.id" :label="tag.tagName" :value="tag.id" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col v-for="attribute in productAttributes" :key="attribute.id" :span="12">
+            <el-form-item :label="attribute.attributeName">
+              <el-select v-if="attribute.inputType === 'SELECT'" v-model="selectionFor(attribute.id).attributeValueId"
+                clearable style="width:100%" placeholder="请选择">
+                <el-option v-for="value in attribute.values || []" :key="value.id" :label="value.valueName" :value="value.id" />
+              </el-select>
+              <el-input-number v-else-if="attribute.inputType === 'NUMBER'" v-model="selectionFor(attribute.id).customValue"
+                controls-position="right" style="width:100%" />
+              <el-input v-else v-model="selectionFor(attribute.id).customValue" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -131,7 +152,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getProducts, createProduct, updateProduct, deleteProduct, getCategoryOptions, getUnitOptions } from '@/api/masterdata'
+import { getProducts, getProduct, createProduct, updateProduct, deleteProduct, getCategoryOptions, getUnitOptions, getProductMetadataOptions } from '@/api/masterdata'
 
 const loading = ref(false)
 const submitting = ref(false)
@@ -141,6 +162,8 @@ const query = reactive({ page: 1, size: 10, productCode: '', productName: '', ca
 
 const categoryOptions = ref<any[]>([])
 const unitOptions = ref<any[]>([])
+const productTags = ref<any[]>([])
+const productAttributes = ref<any[]>([])
 
 const dialogVisible = ref(false)
 const dialogTitle = ref('新增商品')
@@ -158,6 +181,8 @@ const form = reactive({
   purchasePrice: 0,
   salePrice: 0,
   minStock: 0,
+  tagIds: [] as number[],
+  attributes: [] as any[],
   status: 'ENABLED',
   remark: ''
 })
@@ -170,9 +195,11 @@ onMounted(() => { fetchData(); loadOptions() })
 
 async function loadOptions() {
   try {
-    const [catRes, unitRes] = await Promise.all([getCategoryOptions(), getUnitOptions()])
+    const [catRes, unitRes, metadataRes] = await Promise.all([getCategoryOptions(), getUnitOptions(), getProductMetadataOptions()])
     categoryOptions.value = catRes.data || []
     unitOptions.value = unitRes.data || []
+    productTags.value = metadataRes.data?.tags || []
+    productAttributes.value = metadataRes.data?.attributes || []
   } catch { /* ignore */ }
 }
 
@@ -191,22 +218,37 @@ function handleAdd() {
   Object.assign(form, {
     productCode: '', productName: '', barcode: '', categoryId: null, unitId: null,
     brand: '', specification: '', modelNo: '', purchasePrice: 0, salePrice: 0,
-    minStock: 0, status: 'ENABLED', remark: ''
+    minStock: 0, tagIds: [], attributes: emptySelections(), status: 'ENABLED', remark: ''
   })
   dialogVisible.value = true
 }
 
-function handleEdit(row: any) {
+async function handleEdit(row: any) {
+  const detail = (await getProduct(row.id)).data
   editingId.value = row.id
   dialogTitle.value = '编辑商品'
   Object.assign(form, {
-    productCode: row.productCode, productName: row.productName, barcode: row.barcode,
-    categoryId: row.categoryId, unitId: row.unitId, brand: row.brand,
-    specification: row.specification, modelNo: row.modelNo,
-    purchasePrice: row.purchasePrice, salePrice: row.salePrice,
-    minStock: row.minStock, status: row.status, remark: row.remark
+    productCode: detail.productCode, productName: detail.productName, barcode: detail.barcode,
+    categoryId: detail.categoryId, unitId: detail.unitId, brand: detail.brand,
+    specification: detail.specification, modelNo: detail.modelNo,
+    purchasePrice: detail.purchasePrice, salePrice: detail.salePrice,
+    minStock: detail.minStock, tagIds: detail.tagIds || [], attributes: mergeSelections(detail.attributes || []),
+    status: detail.status, remark: detail.remark
   })
   dialogVisible.value = true
+}
+
+function emptySelections() { return productAttributes.value.map((attribute: any) => ({ attributeId: attribute.id, attributeValueId: null, customValue: null })) }
+function mergeSelections(saved: any[]) {
+  return productAttributes.value.map((attribute: any) => {
+    const current = saved.find((item: any) => item.attributeId === attribute.id)
+    return current ? { ...current } : { attributeId: attribute.id, attributeValueId: null, customValue: null }
+  })
+}
+function selectionFor(attributeId: number) {
+  let selection = form.attributes.find((item: any) => item.attributeId === attributeId)
+  if (!selection) { selection = { attributeId, attributeValueId: null, customValue: null }; form.attributes.push(selection) }
+  return selection
 }
 
 async function handleSubmit() {
@@ -236,4 +278,5 @@ async function handleDelete(row: any) {
 <style scoped>
 .page-wrapper { padding: 0; }
 .toolbar { display: flex; gap: 10px; flex-wrap: wrap; }
+.tag-item { margin-right: 4px; }
 </style>

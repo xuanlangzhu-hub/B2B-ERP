@@ -32,8 +32,14 @@ public class InvStockService extends ServiceImpl<InvStockBalanceMapper, InvStock
 
     public PageResult<InvStockBalance> pageStocks(Long enterpriseId, Integer page, Integer size, Long warehouseId,
                                                    String productCode, String productName, Boolean lowStock) {
+        return pageStocks(enterpriseId, page, size, warehouseId, productCode, productName, lowStock, null);
+    }
+
+    public PageResult<InvStockBalance> pageStocks(Long enterpriseId, Integer page, Integer size, Long warehouseId,
+                                                   String productCode, String productName, Boolean lowStock,
+                                                   Long categoryId) {
         List<InvStockBalance> filtered = queryStocks(
-                enterpriseId, warehouseId, productCode, productName, lowStock);
+                enterpriseId, warehouseId, productCode, productName, lowStock, categoryId);
 
         int start = (page - 1) * size;
         int end = Math.min(start + size, filtered.size());
@@ -44,8 +50,14 @@ public class InvStockService extends ServiceImpl<InvStockBalanceMapper, InvStock
 
     public Map<String, Object> summaryStocks(Long enterpriseId, Long warehouseId,
                                               String productCode, String productName) {
+        return summaryStocks(enterpriseId, warehouseId, productCode, productName, null, null);
+    }
+
+    public Map<String, Object> summaryStocks(Long enterpriseId, Long warehouseId,
+                                              String productCode, String productName,
+                                              Boolean lowStock, Long categoryId) {
         List<InvStockBalance> stocks = queryStocks(
-                enterpriseId, warehouseId, productCode, productName, false);
+                enterpriseId, warehouseId, productCode, productName, lowStock, categoryId);
         BigDecimal totalQuantity = stocks.stream().map(InvStockBalance::getQuantity)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal totalStockAmount = stocks.stream()
@@ -65,7 +77,8 @@ public class InvStockService extends ServiceImpl<InvStockBalanceMapper, InvStock
     }
 
     private List<InvStockBalance> queryStocks(Long enterpriseId, Long warehouseId,
-                                               String productCode, String productName, Boolean lowStock) {
+                                               String productCode, String productName, Boolean lowStock,
+                                               Long categoryId) {
         List<InvStockBalance> allStocks = lambdaQuery()
                 .eq(InvStockBalance::getEnterpriseId, enterpriseId)
                 .eq(warehouseId != null, InvStockBalance::getWarehouseId, warehouseId)
@@ -76,6 +89,7 @@ public class InvStockService extends ServiceImpl<InvStockBalanceMapper, InvStock
         Map<Long, MdProduct> productMap = productMapper.selectList(
                 new LambdaQueryWrapper<MdProduct>()
                         .eq(MdProduct::getEnterpriseId, enterpriseId)
+                        .eq(categoryId != null, MdProduct::getCategoryId, categoryId)
                         .like(StrUtil.isNotBlank(productCode), MdProduct::getProductCode, productCode)
                         .like(StrUtil.isNotBlank(productName), MdProduct::getProductName, productName))
                 .stream().collect(Collectors.toMap(MdProduct::getId, p -> p, (a, b) -> a));

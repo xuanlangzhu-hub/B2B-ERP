@@ -25,3 +25,11 @@ application-local.yml
 *.log
 .DS_Store
 Thumbs.db
+
+# Team coordination and personal handoff artifacts
+team-tasks/
+deliverables/
+DETAILED_TASK_ASSIGNMENT.md
+ONE_WEEK_TASKS.md
+PROJECT_PLAN.md
+docs/MEMBER*.md

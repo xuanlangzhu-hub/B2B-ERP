@@ -36,4 +36,7 @@ public class MdSupplier {
     private Integer deleted;
     @Version
     private Integer version;
+
+    @TableField(exist = false)
+    private String categoryName;
 }

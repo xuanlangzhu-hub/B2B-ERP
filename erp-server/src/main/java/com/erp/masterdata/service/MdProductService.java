@@ -26,11 +26,13 @@ public class MdProductService extends ServiceImpl<MdProductMapper, MdProduct> {
 
     private final MdProductCategoryMapper categoryMapper;
     private final MdUnitMapper unitMapper;
+    private final MdMetadataService metadataService;
 
-    public PageResult<MdProduct> pageQuery(Integer page, Integer size, String productCode, String productName,
+    public PageResult<MdProduct> pageQuery(Long enterpriseId, Integer page, Integer size, String productCode, String productName,
                                             String barcode, Long categoryId, String status) {
         LambdaQueryWrapper<MdProduct> wrapper = new LambdaQueryWrapper<>();
-        wrapper.like(StrUtil.isNotBlank(productCode), MdProduct::getProductCode, productCode)
+        wrapper.eq(MdProduct::getEnterpriseId, enterpriseId)
+                .like(StrUtil.isNotBlank(productCode), MdProduct::getProductCode, productCode)
                 .like(StrUtil.isNotBlank(productName), MdProduct::getProductName, productName)
                 .like(StrUtil.isNotBlank(barcode), MdProduct::getBarcode, barcode)
                 .eq(categoryId != null, MdProduct::getCategoryId, categoryId)
@@ -38,11 +40,21 @@ public class MdProductService extends ServiceImpl<MdProductMapper, MdProduct> {
                 .orderByDesc(MdProduct::getCreatedAt);
         Page<MdProduct> result = page(new Page<>(page, size), wrapper);
         enrichProducts(result.getRecords());
+        metadataService.enrichProducts(result.getRecords());
         return PageResult.of(result.getRecords(), result.getTotal(), page, size);
+    }
+
+    public MdProduct getDetail(Long id, Long enterpriseId) {
+        MdProduct product = lambdaQuery().eq(MdProduct::getId, id).eq(MdProduct::getEnterpriseId, enterpriseId).one();
+        if (product == null) throw new BusinessException("商品不存在");
+        enrichProducts(List.of(product));
+        metadataService.enrichProducts(List.of(product));
+        return product;
     }
 
     @Transactional
     public MdProduct create(MdProduct product, Long enterpriseId, Long operatorId) {
+        validateReferences(product, enterpriseId);
         if (lambdaQuery().eq(MdProduct::getProductCode, product.getProductCode())
                 .eq(MdProduct::getEnterpriseId, enterpriseId).count() > 0) {
             throw new BusinessException("商品编码已存在");
@@ -50,29 +62,28 @@ public class MdProductService extends ServiceImpl<MdProductMapper, MdProduct> {
         product.setEnterpriseId(enterpriseId);
         product.setCreatedBy(operatorId);
         save(product);
-        return product;
+        metadataService.saveProductRelations(product.getId(), enterpriseId, product.getTagIds(), product.getAttributes());
+        return getDetail(product.getId(), enterpriseId);
     }
 
     @Transactional
-    public void update(MdProduct product) {
-        MdProduct existing = getById(product.getId());
-        if (existing == null) {
-            throw new BusinessException("商品不存在");
-        }
+    public void update(MdProduct product, Long enterpriseId, Long operatorId) {
+        getDetail(product.getId(), enterpriseId);
+        validateReferences(product, enterpriseId);
         if (lambdaQuery().eq(MdProduct::getProductCode, product.getProductCode())
-                .eq(MdProduct::getEnterpriseId, existing.getEnterpriseId())
+                .eq(MdProduct::getEnterpriseId, enterpriseId)
                 .ne(MdProduct::getId, product.getId()).count() > 0) {
             throw new BusinessException("商品编码已存在");
         }
+        product.setEnterpriseId(enterpriseId).setUpdatedBy(operatorId);
         updateById(product);
+        metadataService.saveProductRelations(product.getId(), enterpriseId, product.getTagIds(), product.getAttributes());
     }
 
     @Transactional
-    public void delete(Long id) {
-        MdProduct product = getById(id);
-        if (product == null) {
-            throw new BusinessException("商品不存在");
-        }
+    public void delete(Long id, Long enterpriseId) {
+        getDetail(id, enterpriseId);
+        metadataService.saveProductRelations(id, enterpriseId, List.of(), List.of());
         removeById(id);
     }
 
@@ -115,5 +126,14 @@ public class MdProductService extends ServiceImpl<MdProductMapper, MdProduct> {
             product.setCategoryName(category != null ? category.getCategoryName() : null);
             product.setUnitName(unit != null ? unit.getUnitName() : null);
         });
+    }
+
+    private void validateReferences(MdProduct product, Long enterpriseId) {
+        if (product.getCategoryId() == null || categoryMapper.selectCount(new LambdaQueryWrapper<MdProductCategory>()
+                .eq(MdProductCategory::getId, product.getCategoryId()).eq(MdProductCategory::getEnterpriseId, enterpriseId)
+                .eq(MdProductCategory::getStatus, "ENABLED")) == 0) throw new BusinessException("商品分类无效或已停用");
+        if (product.getUnitId() == null || unitMapper.selectCount(new LambdaQueryWrapper<MdUnit>()
+                .eq(MdUnit::getId, product.getUnitId()).eq(MdUnit::getEnterpriseId, enterpriseId)
+                .eq(MdUnit::getStatus, "ENABLED")) == 0) throw new BusinessException("商品单位无效或已停用");
     }
 }

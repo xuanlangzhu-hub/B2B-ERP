@@ -31,6 +31,10 @@ sql/V1__init_schema.sql
 sql/V2__seed_demo_data.sql
 sql/V3__align_permissions.sql
 sql/V4__finance_closure.sql
+sql/V5__inventory_operations.sql
+sql/V6__inventory_borrow.sql
+sql/V7__master_data_core.sql
+sql/V8__master_data_metadata.sql
 ```
 
 演示数据脚本包含 `admin / Admin@123456`，部署后应立即修改演示密码。

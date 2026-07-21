@@ -27,9 +27,14 @@ team-tasks/   五名组员的详细任务单
 2. `sql/V2__seed_demo_data.sql`
 3. `sql/V3__align_permissions.sql`
 4. `sql/V4__finance_closure.sql`
+5. `sql/V5__inventory_operations.sql`
+6. `sql/V6__inventory_borrow.sql`
+7. `sql/V7__master_data_core.sql`
+8. `sql/V8__master_data_metadata.sql`
+9. `sql/V9__system_permissions_and_demo.sql`
 
 本机开发默认连接 `127.0.0.1:3306/group_project`，默认本地账号为
-`erp_local / ErpLocal@2026`。首次搭建时需要创建数据库和用户，再依次执行上面的三个脚本。
+`erp_local / ErpLocal@2026`。首次搭建时需要创建数据库和用户，再依次执行上面的八个脚本。
 
 如果需要改为连接服务器 MySQL，并且服务器只允许 SSH 隧道访问，先建立本地端口转发：
 

@@ -6,6 +6,7 @@ import lombok.experimental.Accessors;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Accessors(chain = true)
@@ -40,4 +41,13 @@ public class MdCustomer {
     private Integer deleted;
     @Version
     private Integer version;
+
+    @TableField(exist = false)
+    private String categoryName;
+    @TableField(exist = false)
+    private String levelName;
+    @TableField(exist = false)
+    private List<Long> tagIds;
+    @TableField(exist = false)
+    private List<String> tagNames;
 }

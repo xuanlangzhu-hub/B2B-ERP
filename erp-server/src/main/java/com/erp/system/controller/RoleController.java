@@ -22,14 +22,14 @@ public class RoleController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('system:role:list')")
-    public Result<List<SysRole>> list() {
-        return Result.success(roleService.listRoles());
+    public Result<List<SysRole>> list(@AuthenticationPrincipal LoginUser loginUser) {
+        return Result.success(roleService.listRoles(loginUser.getEnterpriseId()));
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('system:role:list')")
-    public Result<SysRole> detail(@PathVariable Long id) {
-        return Result.success(roleService.getById(id));
+    public Result<SysRole> detail(@PathVariable Long id, @AuthenticationPrincipal LoginUser loginUser) {
+        return Result.success(roleService.getRole(id, loginUser.getEnterpriseId()));
     }
 
     @PostMapping
@@ -41,22 +41,30 @@ public class RoleController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('system:role:list')")
-    public Result<Void> update(@PathVariable Long id, @Valid @RequestBody RoleRequest request) {
-        roleService.updateRole(id, request);
+    public Result<Void> update(@PathVariable Long id, @Valid @RequestBody RoleRequest request,
+                               @AuthenticationPrincipal LoginUser loginUser) {
+        roleService.updateRole(id, request, loginUser.getEnterpriseId());
         return Result.success();
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('system:role:list')")
-    public Result<Void> delete(@PathVariable Long id) {
-        roleService.deleteRole(id);
+    public Result<Void> delete(@PathVariable Long id, @AuthenticationPrincipal LoginUser loginUser) {
+        roleService.deleteRole(id, loginUser.getEnterpriseId());
         return Result.success();
     }
 
     @PutMapping("/{id}/menus")
     @PreAuthorize("hasAuthority('system:role:list')")
-    public Result<Void> assignMenus(@PathVariable Long id, @RequestBody List<Long> menuIds) {
-        roleService.assignMenus(id, menuIds);
+    public Result<Void> assignMenus(@PathVariable Long id, @RequestBody List<Long> menuIds,
+                                    @AuthenticationPrincipal LoginUser loginUser) {
+        roleService.assignMenus(id, menuIds, loginUser.getEnterpriseId());
         return Result.success();
+    }
+
+    @GetMapping("/{id}/menus")
+    @PreAuthorize("hasAuthority('system:role:list')")
+    public Result<List<Long>> getRoleMenus(@PathVariable Long id, @AuthenticationPrincipal LoginUser loginUser) {
+        return Result.success(roleService.getRoleMenus(id, loginUser.getEnterpriseId()));
     }
 }

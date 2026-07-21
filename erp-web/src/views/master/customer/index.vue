@@ -5,6 +5,12 @@
         <el-input v-model="query.customerCode" placeholder="客户编码" clearable style="width:180px" />
         <el-input v-model="query.customerName" placeholder="客户名称" clearable style="width:180px" />
         <el-input v-model="query.contactPhone" placeholder="联系电话" clearable style="width:180px" />
+        <el-select v-model="query.categoryId" placeholder="客户分类" clearable style="width:150px">
+          <el-option v-for="item in categoryOptions" :key="item.value" :label="item.label" :value="item.value" />
+        </el-select>
+        <el-select v-model="query.levelId" placeholder="客户等级" clearable style="width:150px">
+          <el-option v-for="item in levelOptions" :key="item.value" :label="item.label" :value="item.value" />
+        </el-select>
         <el-select v-model="query.status" placeholder="状态" clearable style="width:120px">
           <el-option label="启用" value="ENABLED" />
           <el-option label="禁用" value="DISABLED" />
@@ -17,6 +23,11 @@
       <el-table :data="tableData" v-loading="loading" border stripe>
         <el-table-column prop="customerCode" label="客户编码" width="130" />
         <el-table-column prop="customerName" label="客户名称" width="180" />
+        <el-table-column prop="categoryName" label="客户分类" width="120" />
+        <el-table-column prop="levelName" label="客户等级" width="120" />
+        <el-table-column label="客户标签" min-width="150">
+          <template #default="{ row }">{{ (row.tagNames || []).join('、') || '-' }}</template>
+        </el-table-column>
         <el-table-column prop="contactName" label="联系人" width="100" />
         <el-table-column prop="contactPhone" label="联系电话" width="130" />
         <el-table-column prop="address" label="地址" min-width="180" />
@@ -50,6 +61,27 @@
           <el-col :span="12">
             <el-form-item label="客户名称" prop="customerName">
               <el-input v-model="form.customerName" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="客户分类">
+              <el-select v-model="form.categoryId" clearable style="width:100%">
+                <el-option v-for="item in categoryOptions" :key="item.value" :label="item.label" :value="item.value" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="客户等级">
+              <el-select v-model="form.levelId" clearable style="width:100%">
+                <el-option v-for="item in levelOptions" :key="item.value" :label="item.label" :value="item.value" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="客户标签">
+              <el-select v-model="form.tagIds" multiple clearable style="width:100%" placeholder="请选择客户标签">
+                <el-option v-for="item in tagOptions" :key="item.id" :label="item.tagName" :value="item.id" />
+              </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -108,13 +140,19 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getCustomers, createCustomer, updateCustomer, deleteCustomer } from '@/api/masterdata'
+import {
+  getCustomers, getCustomer, createCustomer, updateCustomer, deleteCustomer,
+  getCustomerCategoryOptions, getCustomerLevelOptions, getCustomerTagOptions
+} from '@/api/masterdata'
 
 const loading = ref(false)
 const submitting = ref(false)
 const tableData = ref<any[]>([])
 const total = ref(0)
-const query = reactive({ page: 1, size: 10, customerCode: '', customerName: '', contactPhone: '', status: '' })
+const query = reactive({ page: 1, size: 10, customerCode: '', customerName: '', contactPhone: '', categoryId: '', levelId: '', status: '' })
+const categoryOptions = ref<any[]>([])
+const levelOptions = ref<any[]>([])
+const tagOptions = ref<any[]>([])
 
 const dialogVisible = ref(false)
 const dialogTitle = ref('新增客户')
@@ -123,6 +161,9 @@ const formRef = ref()
 const form = reactive({
   customerCode: '',
   customerName: '',
+  categoryId: '',
+  levelId: '',
+  tagIds: [] as number[],
   contactName: '',
   contactPhone: '',
   email: '',
@@ -137,7 +178,15 @@ const formRules = {
   customerName: [{ required: true, message: '请输入客户名称', trigger: 'blur' }]
 }
 
-onMounted(() => { fetchData() })
+onMounted(async () => {
+  const [categories, levels, tags] = await Promise.all([
+    getCustomerCategoryOptions(), getCustomerLevelOptions(), getCustomerTagOptions()
+  ])
+  categoryOptions.value = categories.data || []
+  levelOptions.value = levels.data || []
+  tagOptions.value = tags.data || []
+  fetchData()
+})
 
 async function fetchData() {
   loading.value = true
@@ -152,20 +201,23 @@ function handleAdd() {
   editingId.value = null
   dialogTitle.value = '新增客户'
   Object.assign(form, {
-    customerCode: '', customerName: '', contactName: '', contactPhone: '', email: '',
+    customerCode: '', customerName: '', categoryId: '', levelId: '', tagIds: [], contactName: '', contactPhone: '', email: '',
     address: '', creditLimit: 0, paymentDays: 0, status: 'ENABLED', remark: ''
   })
   dialogVisible.value = true
 }
 
-function handleEdit(row: any) {
+async function handleEdit(row: any) {
+  const res = await getCustomer(row.id)
+  const detail = res.data
   editingId.value = row.id
   dialogTitle.value = '编辑客户'
   Object.assign(form, {
-    customerCode: row.customerCode, customerName: row.customerName,
-    contactName: row.contactName, contactPhone: row.contactPhone, email: row.email,
-    address: row.address, creditLimit: row.creditLimit, paymentDays: row.paymentDays,
-    status: row.status, remark: row.remark
+    customerCode: detail.customerCode, customerName: detail.customerName,
+    categoryId: detail.categoryId || '', levelId: detail.levelId || '', tagIds: detail.tagIds || [],
+    contactName: detail.contactName, contactPhone: detail.contactPhone, email: detail.email,
+    address: detail.address, creditLimit: detail.creditLimit, paymentDays: detail.paymentDays,
+    status: detail.status, remark: detail.remark
   })
   dialogVisible.value = true
 }

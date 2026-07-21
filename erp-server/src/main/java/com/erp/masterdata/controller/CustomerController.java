@@ -28,14 +28,17 @@ public class CustomerController {
             @RequestParam(required = false) String customerCode,
             @RequestParam(required = false) String customerName,
             @RequestParam(required = false) String contactPhone,
-            @RequestParam(required = false) String status) {
-        return Result.success(customerService.pageQuery(page, size, customerCode, customerName, contactPhone, status));
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) Long levelId,
+            @RequestParam(required = false) String status,
+            @AuthenticationPrincipal LoginUser loginUser) {
+        return Result.success(customerService.pageQuery(loginUser.getEnterpriseId(), page, size, customerCode, customerName, contactPhone, categoryId, levelId, status));
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('md:customer:list')")
-    public Result<MdCustomer> detail(@PathVariable Long id) {
-        return Result.success(customerService.getById(id));
+    public Result<MdCustomer> detail(@PathVariable Long id, @AuthenticationPrincipal LoginUser loginUser) {
+        return Result.success(customerService.getDetail(id, loginUser.getEnterpriseId()));
     }
 
     @PostMapping
@@ -47,16 +50,17 @@ public class CustomerController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('md:customer:update')")
-    public Result<Void> update(@PathVariable Long id, @RequestBody MdCustomer customer) {
+    public Result<Void> update(@PathVariable Long id, @RequestBody MdCustomer customer,
+                               @AuthenticationPrincipal LoginUser loginUser) {
         customer.setId(id);
-        customerService.update(customer);
+        customerService.update(customer, loginUser.getEnterpriseId(), loginUser.getUserId());
         return Result.success();
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('md:customer:delete')")
-    public Result<Void> delete(@PathVariable Long id) {
-        customerService.delete(id);
+    public Result<Void> delete(@PathVariable Long id, @AuthenticationPrincipal LoginUser loginUser) {
+        customerService.delete(id, loginUser.getEnterpriseId());
         return Result.success();
     }
 

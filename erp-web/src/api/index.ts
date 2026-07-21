@@ -4,9 +4,18 @@ export function login(username: string, password: string) {
   return request.post('/auth/login', { username, password })
 }
 
+export function registerAccount(data: any) {
+  return request.post('/auth/register', data)
+}
+
 export function getCurrentUser() {
   return request.get('/auth/me')
 }
+export const getProfile = () => request.get('/auth/profile')
+export const updateProfile = (data: any) => request.put('/auth/profile', data)
+export const changePassword = (data: any) => request.put('/auth/password', data)
+export const getAccessibleStores = () => request.get('/auth/stores')
+export const changeDefaultStore = (storeId: number) => request.put(`/auth/default-store/${storeId}`)
 
 // Users
 export function getUsers(params: any) {
@@ -74,8 +83,19 @@ export function getUserMenus() {
 export function assignRoleMenus(id: number, menuIds: number[]) {
   return request.put(`/roles/${id}/menus`, menuIds)
 }
+export const getRoleMenus = (id: number) => request.get(`/roles/${id}/menus`)
 
 // Logs
 export function getLogs(params: any) {
   return request.get('/operation-logs', { params })
 }
+export const getEnterprise = () => request.get('/enterprise/current')
+export const updateEnterprise = (data: any) => request.put('/enterprise/current', data)
+export const getNotices = (params: any) => request.get('/notices', { params })
+export const getUnreadNoticeCount = () => request.get('/notices/unread-count')
+export const markNoticeRead = (id: number) => request.post(`/notices/${id}/read`)
+export const getNoticeManage = (params: any) => request.get('/notices/manage', { params })
+export const createNotice = (data: any) => request.post('/notices', data)
+export const updateNotice = (id: number, data: any) => request.put(`/notices/${id}`, data)
+export const publishNotice = (id: number) => request.post(`/notices/${id}/publish`)
+export const deleteNotice = (id: number) => request.delete(`/notices/${id}`)

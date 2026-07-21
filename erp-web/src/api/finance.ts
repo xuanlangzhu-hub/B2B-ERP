@@ -20,3 +20,10 @@ export function deleteAccount(id: number) { return request.delete(`/accounts/${i
 
 export function getReceivables(params: any) { return request.get('/receivables', { params }) }
 export function getPayables(params: any) { return request.get('/payables', { params }) }
+
+export function getOtherTransactions(params: any) { return request.get('/other-transactions', { params }) }
+export function createOtherTransaction(data: any) { return request.post('/other-transactions', data) }
+export function updateOtherTransaction(id: number, data: any) { return request.put(`/other-transactions/${id}`, data) }
+export function confirmOtherTransaction(id: number) { return request.post(`/other-transactions/${id}/confirm`) }
+export function cancelOtherTransaction(id: number) { return request.post(`/other-transactions/${id}/cancel`) }
+export function deleteOtherTransaction(id: number) { return request.delete(`/other-transactions/${id}`) }

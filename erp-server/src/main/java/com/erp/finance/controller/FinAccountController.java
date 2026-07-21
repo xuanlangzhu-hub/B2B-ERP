@@ -34,7 +34,7 @@ public class FinAccountController {
     }
 
     @GetMapping("/options")
-    @PreAuthorize("hasAnyAuthority('finance:accounting:list', 'finance:receipt:list', 'finance:payment:list', 'sales:order:list', 'purchase:order:list')")
+    @PreAuthorize("hasAnyAuthority('finance:accounting:list', 'finance:receipt:list', 'finance:payment:list', 'finance:other:list', 'sales:order:list', 'purchase:order:list')")
     public Result<List<Map<String, Object>>> options(@AuthenticationPrincipal LoginUser loginUser) {
         return Result.success(accountService.options(loginUser.getEnterpriseId()));
     }

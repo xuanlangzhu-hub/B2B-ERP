@@ -27,14 +27,15 @@ public class ProductCategoryController {
             @RequestParam(defaultValue = "10") Integer size,
             @RequestParam(required = false) String categoryCode,
             @RequestParam(required = false) String categoryName,
-            @RequestParam(required = false) String status) {
-        return Result.success(categoryService.pageQuery(page, size, categoryCode, categoryName, status));
+            @RequestParam(required = false) String status,
+            @AuthenticationPrincipal LoginUser loginUser) {
+        return Result.success(categoryService.pageQuery(loginUser.getEnterpriseId(), page, size, categoryCode, categoryName, status));
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('md:category:list')")
-    public Result<MdProductCategory> detail(@PathVariable Long id) {
-        return Result.success(categoryService.getById(id));
+    public Result<MdProductCategory> detail(@PathVariable Long id, @AuthenticationPrincipal LoginUser loginUser) {
+        return Result.success(categoryService.getDetail(id, loginUser.getEnterpriseId()));
     }
 
     @PostMapping
@@ -46,16 +47,17 @@ public class ProductCategoryController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('md:category:update')")
-    public Result<Void> update(@PathVariable Long id, @RequestBody MdProductCategory category) {
+    public Result<Void> update(@PathVariable Long id, @RequestBody MdProductCategory category,
+                               @AuthenticationPrincipal LoginUser loginUser) {
         category.setId(id);
-        categoryService.update(category);
+        categoryService.update(category, loginUser.getEnterpriseId(), loginUser.getUserId());
         return Result.success();
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('md:category:delete')")
-    public Result<Void> delete(@PathVariable Long id) {
-        categoryService.delete(id);
+    public Result<Void> delete(@PathVariable Long id, @AuthenticationPrincipal LoginUser loginUser) {
+        categoryService.delete(id, loginUser.getEnterpriseId());
         return Result.success();
     }
 

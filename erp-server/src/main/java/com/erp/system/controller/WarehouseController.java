@@ -27,14 +27,15 @@ public class WarehouseController {
             @RequestParam(defaultValue = "10") Integer size,
             @RequestParam(required = false) String warehouseCode,
             @RequestParam(required = false) String warehouseName,
-            @RequestParam(required = false) String status) {
-        return Result.success(warehouseService.pageQuery(page, size, warehouseCode, warehouseName, status));
+            @RequestParam(required = false) String status,
+            @AuthenticationPrincipal LoginUser loginUser) {
+        return Result.success(warehouseService.pageQuery(loginUser.getEnterpriseId(), page, size, warehouseCode, warehouseName, status));
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('system:warehouse:list')")
-    public Result<OrgWarehouse> detail(@PathVariable Long id) {
-        return Result.success(warehouseService.getById(id));
+    public Result<OrgWarehouse> detail(@PathVariable Long id, @AuthenticationPrincipal LoginUser loginUser) {
+        return Result.success(warehouseService.getDetail(id, loginUser.getEnterpriseId()));
     }
 
     @PostMapping
@@ -46,16 +47,17 @@ public class WarehouseController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('system:warehouse:update')")
-    public Result<Void> update(@PathVariable Long id, @RequestBody OrgWarehouse warehouse) {
+    public Result<Void> update(@PathVariable Long id, @RequestBody OrgWarehouse warehouse,
+                               @AuthenticationPrincipal LoginUser loginUser) {
         warehouse.setId(id);
-        warehouseService.update(warehouse);
+        warehouseService.update(warehouse, loginUser.getEnterpriseId(), loginUser.getUserId());
         return Result.success();
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('system:warehouse:delete')")
-    public Result<Void> delete(@PathVariable Long id) {
-        warehouseService.delete(id);
+    public Result<Void> delete(@PathVariable Long id, @AuthenticationPrincipal LoginUser loginUser) {
+        warehouseService.delete(id, loginUser.getEnterpriseId());
         return Result.success();
     }
 

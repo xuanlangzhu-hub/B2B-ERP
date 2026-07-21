@@ -16,9 +16,10 @@
       <el-table :data="tableData" v-loading="loading" border stripe>
         <el-table-column prop="warehouseCode" label="仓库编码" width="130" />
         <el-table-column prop="warehouseName" label="仓库名称" width="180" />
+        <el-table-column prop="storeName" label="所属门店" width="150"><template #default="{row}">{{ row.storeName || '总部' }}</template></el-table-column>
         <el-table-column prop="warehouseType" label="仓库类型" width="120">
           <template #default="{ row }">
-            <el-tag size="small">{{ row.warehouseType }}</el-tag>
+            <el-tag size="small">{{ typeLabel(row.warehouseType) }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="managerName" label="负责人" width="100" />
@@ -56,11 +57,19 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
+            <el-form-item label="所属门店">
+              <el-select v-model="form.storeId" clearable style="width:100%" placeholder="不选择表示总部仓">
+                <el-option v-for="item in storeOptions" :key="item.value" :label="item.label" :value="item.value" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
             <el-form-item label="仓库类型" prop="warehouseType">
               <el-select v-model="form.warehouseType" style="width:100%">
-                <el-option label="自营仓" value="自营仓" />
-                <el-option label="第三方仓" value="第三方仓" />
-                <el-option label="虚拟仓" value="虚拟仓" />
+                <el-option label="普通仓" value="NORMAL" />
+                <el-option label="门店仓" value="STORE" />
+                <el-option label="退货仓" value="RETURN" />
+                <el-option label="残次品仓" value="DEFECTIVE" />
               </el-select>
             </el-form-item>
           </el-col>
@@ -105,12 +114,13 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getWarehouses, createWarehouse, updateWarehouse, deleteWarehouse } from '@/api/masterdata'
+import { getWarehouses, createWarehouse, updateWarehouse, deleteWarehouse, getStoreOptions } from '@/api/masterdata'
 
 const loading = ref(false)
 const submitting = ref(false)
 const tableData = ref<any[]>([])
 const total = ref(0)
+const storeOptions = ref<any[]>([])
 const query = reactive({ page: 1, size: 10, warehouseCode: '', warehouseName: '', status: '' })
 
 const dialogVisible = ref(false)
@@ -120,7 +130,8 @@ const formRef = ref()
 const form = reactive({
   warehouseCode: '',
   warehouseName: '',
-  warehouseType: '',
+  storeId: '',
+  warehouseType: 'NORMAL',
   managerName: '',
   contactPhone: '',
   address: '',
@@ -132,7 +143,11 @@ const formRules = {
   warehouseName: [{ required: true, message: '请输入仓库名称', trigger: 'blur' }]
 }
 
-onMounted(() => { fetchData() })
+onMounted(async () => { storeOptions.value = (await getStoreOptions()).data || []; fetchData() })
+
+function typeLabel(type: string) {
+  return ({ NORMAL: '普通仓', STORE: '门店仓', RETURN: '退货仓', DEFECTIVE: '残次品仓' } as Record<string, string>)[type] || type
+}
 
 async function fetchData() {
   loading.value = true
@@ -147,7 +162,7 @@ function handleAdd() {
   editingId.value = null
   dialogTitle.value = '新增仓库'
   Object.assign(form, {
-    warehouseCode: '', warehouseName: '', warehouseType: '', managerName: '',
+    warehouseCode: '', warehouseName: '', storeId: '', warehouseType: 'NORMAL', managerName: '',
     contactPhone: '', address: '', status: 'ENABLED', remark: ''
   })
   dialogVisible.value = true
@@ -158,7 +173,7 @@ function handleEdit(row: any) {
   dialogTitle.value = '编辑仓库'
   Object.assign(form, {
     warehouseCode: row.warehouseCode, warehouseName: row.warehouseName,
-    warehouseType: row.warehouseType, managerName: row.managerName,
+    storeId: row.storeId || '', warehouseType: row.warehouseType, managerName: row.managerName,
     contactPhone: row.contactPhone, address: row.address,
     status: row.status, remark: row.remark
   })

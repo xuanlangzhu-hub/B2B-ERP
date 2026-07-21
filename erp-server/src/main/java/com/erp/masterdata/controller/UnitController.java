@@ -27,14 +27,15 @@ public class UnitController {
             @RequestParam(defaultValue = "10") Integer size,
             @RequestParam(required = false) String unitCode,
             @RequestParam(required = false) String unitName,
-            @RequestParam(required = false) String status) {
-        return Result.success(unitService.pageQuery(page, size, unitCode, unitName, status));
+            @RequestParam(required = false) String status,
+            @AuthenticationPrincipal LoginUser loginUser) {
+        return Result.success(unitService.pageQuery(loginUser.getEnterpriseId(), page, size, unitCode, unitName, status));
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('md:unit:list')")
-    public Result<MdUnit> detail(@PathVariable Long id) {
-        return Result.success(unitService.getById(id));
+    public Result<MdUnit> detail(@PathVariable Long id, @AuthenticationPrincipal LoginUser loginUser) {
+        return Result.success(unitService.getDetail(id, loginUser.getEnterpriseId()));
     }
 
     @PostMapping
@@ -46,16 +47,17 @@ public class UnitController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('md:unit:update')")
-    public Result<Void> update(@PathVariable Long id, @RequestBody MdUnit unit) {
+    public Result<Void> update(@PathVariable Long id, @RequestBody MdUnit unit,
+                               @AuthenticationPrincipal LoginUser loginUser) {
         unit.setId(id);
-        unitService.update(unit);
+        unitService.update(unit, loginUser.getEnterpriseId(), loginUser.getUserId());
         return Result.success();
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('md:unit:delete')")
-    public Result<Void> delete(@PathVariable Long id) {
-        unitService.delete(id);
+    public Result<Void> delete(@PathVariable Long id, @AuthenticationPrincipal LoginUser loginUser) {
+        unitService.delete(id, loginUser.getEnterpriseId());
         return Result.success();
     }
 

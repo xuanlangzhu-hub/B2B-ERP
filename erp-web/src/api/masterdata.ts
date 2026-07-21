@@ -4,6 +4,8 @@ export function getProducts(params: any) {
   return request.get('/products', { params })
 }
 
+export function getProduct(id: number) { return request.get(`/products/${id}`) }
+
 export function getProductOptions() {
   return request.get('/products/options')
 }
@@ -64,6 +66,10 @@ export function getCustomers(params: any) {
   return request.get('/customers', { params })
 }
 
+export function getCustomer(id: number) {
+  return request.get(`/customers/${id}`)
+}
+
 export function getCustomerOptions() {
   return request.get('/customers/options')
 }
@@ -119,3 +125,42 @@ export function updateWarehouse(id: number, data: any) {
 export function deleteWarehouse(id: number) {
   return request.delete(`/warehouses/${id}`)
 }
+
+export function getStores(params: any) { return request.get('/stores', { params }) }
+export function getStoreOptions() { return request.get('/stores/options') }
+export function createStore(data: any) { return request.post('/stores', data) }
+export function updateStore(id: number, data: any) { return request.put(`/stores/${id}`, data) }
+export function deleteStore(id: number) { return request.delete(`/stores/${id}`) }
+
+export function getCustomerCategories(params: any) { return request.get('/customer-categories', { params }) }
+export function getCustomerCategoryOptions() { return request.get('/customer-categories/options') }
+export function createCustomerCategory(data: any) { return request.post('/customer-categories', data) }
+export function updateCustomerCategory(id: number, data: any) { return request.put(`/customer-categories/${id}`, data) }
+export function deleteCustomerCategory(id: number) { return request.delete(`/customer-categories/${id}`) }
+
+export function getCustomerLevels(params: any) { return request.get('/customer-levels', { params }) }
+export function getCustomerLevelOptions() { return request.get('/customer-levels/options') }
+export function createCustomerLevel(data: any) { return request.post('/customer-levels', data) }
+export function updateCustomerLevel(id: number, data: any) { return request.put(`/customer-levels/${id}`, data) }
+export function deleteCustomerLevel(id: number) { return request.delete(`/customer-levels/${id}`) }
+
+export function getSupplierCategories(params: any) { return request.get('/supplier-categories', { params }) }
+export function getSupplierCategoryOptions() { return request.get('/supplier-categories/options') }
+export function createSupplierCategory(data: any) { return request.post('/supplier-categories', data) }
+export function updateSupplierCategory(id: number, data: any) { return request.put(`/supplier-categories/${id}`, data) }
+export function deleteSupplierCategory(id: number) { return request.delete(`/supplier-categories/${id}`) }
+
+export function getProductAttributes(params: any) { return request.get('/product-attributes', { params }) }
+export function createProductAttribute(data: any) { return request.post('/product-attributes', data) }
+export function updateProductAttribute(id: number, data: any) { return request.put(`/product-attributes/${id}`, data) }
+export function deleteProductAttribute(id: number) { return request.delete(`/product-attributes/${id}`) }
+export function getProductTags(params: any) { return request.get('/product-tags', { params }) }
+export function createProductTag(data: any) { return request.post('/product-tags', data) }
+export function updateProductTag(id: number, data: any) { return request.put(`/product-tags/${id}`, data) }
+export function deleteProductTag(id: number) { return request.delete(`/product-tags/${id}`) }
+export function getCustomerTags(params: any) { return request.get('/customer-tags', { params }) }
+export function getCustomerTagOptions() { return request.get('/customer-tags/options') }
+export function createCustomerTag(data: any) { return request.post('/customer-tags', data) }
+export function updateCustomerTag(id: number, data: any) { return request.put(`/customer-tags/${id}`, data) }
+export function deleteCustomerTag(id: number) { return request.delete(`/customer-tags/${id}`) }
+export function getProductMetadataOptions() { return request.get('/product-metadata/options') }

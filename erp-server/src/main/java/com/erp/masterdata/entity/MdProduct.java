@@ -6,6 +6,8 @@ import lombok.experimental.Accessors;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
+import com.erp.masterdata.dto.ProductAttributeSelection;
 
 @Data
 @Accessors(chain = true)
@@ -44,4 +46,10 @@ public class MdProduct {
     private String categoryName;
     @TableField(exist = false)
     private String unitName;
+    @TableField(exist = false)
+    private List<Long> tagIds;
+    @TableField(exist = false)
+    private List<String> tagNames;
+    @TableField(exist = false)
+    private List<ProductAttributeSelection> attributes;
 }

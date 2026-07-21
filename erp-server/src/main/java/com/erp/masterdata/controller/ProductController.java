@@ -29,14 +29,15 @@ public class ProductController {
             @RequestParam(required = false) String productName,
             @RequestParam(required = false) String barcode,
             @RequestParam(required = false) Long categoryId,
-            @RequestParam(required = false) String status) {
-        return Result.success(productService.pageQuery(page, size, productCode, productName, barcode, categoryId, status));
+            @RequestParam(required = false) String status,
+            @AuthenticationPrincipal LoginUser loginUser) {
+        return Result.success(productService.pageQuery(loginUser.getEnterpriseId(), page, size, productCode, productName, barcode, categoryId, status));
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('md:product:list')")
-    public Result<MdProduct> detail(@PathVariable Long id) {
-        return Result.success(productService.getById(id));
+    public Result<MdProduct> detail(@PathVariable Long id, @AuthenticationPrincipal LoginUser loginUser) {
+        return Result.success(productService.getDetail(id, loginUser.getEnterpriseId()));
     }
 
     @PostMapping
@@ -48,16 +49,17 @@ public class ProductController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('md:product:update')")
-    public Result<Void> update(@PathVariable Long id, @RequestBody MdProduct product) {
+    public Result<Void> update(@PathVariable Long id, @RequestBody MdProduct product,
+                               @AuthenticationPrincipal LoginUser loginUser) {
         product.setId(id);
-        productService.update(product);
+        productService.update(product, loginUser.getEnterpriseId(), loginUser.getUserId());
         return Result.success();
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('md:product:delete')")
-    public Result<Void> delete(@PathVariable Long id) {
-        productService.delete(id);
+    public Result<Void> delete(@PathVariable Long id, @AuthenticationPrincipal LoginUser loginUser) {
+        productService.delete(id, loginUser.getEnterpriseId());
         return Result.success();
     }
 

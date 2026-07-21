@@ -1,0 +1,10 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="ErpApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+    <module name="erp-server" />
+    <option name="SPRING_BOOT_MAIN_CLASS" value="com.erp.ErpApplication" />
+    <option name="SHORTEN_COMMAND_LINE" value="JAR_MANIFEST" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

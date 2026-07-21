@@ -5,6 +5,9 @@
         <el-input v-model="query.supplierCode" placeholder="供应商编码" clearable style="width:180px" />
         <el-input v-model="query.supplierName" placeholder="供应商名称" clearable style="width:180px" />
         <el-input v-model="query.contactPhone" placeholder="联系电话" clearable style="width:180px" />
+        <el-select v-model="query.categoryId" placeholder="供应商分类" clearable style="width:160px">
+          <el-option v-for="item in categoryOptions" :key="item.value" :label="item.label" :value="item.value" />
+        </el-select>
         <el-select v-model="query.status" placeholder="状态" clearable style="width:120px">
           <el-option label="启用" value="ENABLED" />
           <el-option label="禁用" value="DISABLED" />
@@ -17,10 +20,10 @@
       <el-table :data="tableData" v-loading="loading" border stripe>
         <el-table-column prop="supplierCode" label="供应商编码" width="130" />
         <el-table-column prop="supplierName" label="供应商名称" width="180" />
+        <el-table-column prop="categoryName" label="供应商分类" width="130" />
         <el-table-column prop="contactName" label="联系人" width="100" />
         <el-table-column prop="contactPhone" label="联系电话" width="130" />
         <el-table-column prop="address" label="地址" min-width="180" />
-        <el-table-column prop="creditLimit" label="信用额度" width="120" />
         <el-table-column prop="status" label="状态" width="80">
           <template #default="{ row }">
             <el-tag :type="row.status === 'ENABLED' ? 'success' : 'danger'" size="small">
@@ -53,6 +56,13 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
+            <el-form-item label="供应商分类">
+              <el-select v-model="form.categoryId" clearable style="width:100%">
+                <el-option v-for="item in categoryOptions" :key="item.value" :label="item.label" :value="item.value" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
             <el-form-item label="联系人">
               <el-input v-model="form.contactName" />
             </el-form-item>
@@ -65,11 +75,6 @@
           <el-col :span="12">
             <el-form-item label="邮箱">
               <el-input v-model="form.email" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="信用额度">
-              <el-input-number v-model="form.creditLimit" :precision="2" :min="0" style="width:100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -108,13 +113,14 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getSuppliers, createSupplier, updateSupplier, deleteSupplier } from '@/api/masterdata'
+import { getSuppliers, createSupplier, updateSupplier, deleteSupplier, getSupplierCategoryOptions } from '@/api/masterdata'
 
 const loading = ref(false)
 const submitting = ref(false)
 const tableData = ref<any[]>([])
 const total = ref(0)
-const query = reactive({ page: 1, size: 10, supplierCode: '', supplierName: '', contactPhone: '', status: '' })
+const query = reactive({ page: 1, size: 10, supplierCode: '', supplierName: '', contactPhone: '', categoryId: '', status: '' })
+const categoryOptions = ref<any[]>([])
 
 const dialogVisible = ref(false)
 const dialogTitle = ref('新增供应商')
@@ -123,11 +129,11 @@ const formRef = ref()
 const form = reactive({
   supplierCode: '',
   supplierName: '',
+  categoryId: '',
   contactName: '',
   contactPhone: '',
   email: '',
   address: '',
-  creditLimit: 0,
   paymentDays: 0,
   status: 'ENABLED',
   remark: ''
@@ -137,7 +143,7 @@ const formRules = {
   supplierName: [{ required: true, message: '请输入供应商名称', trigger: 'blur' }]
 }
 
-onMounted(() => { fetchData() })
+onMounted(async () => { categoryOptions.value = (await getSupplierCategoryOptions()).data || []; fetchData() })
 
 async function fetchData() {
   loading.value = true
@@ -152,8 +158,8 @@ function handleAdd() {
   editingId.value = null
   dialogTitle.value = '新增供应商'
   Object.assign(form, {
-    supplierCode: '', supplierName: '', contactName: '', contactPhone: '', email: '',
-    address: '', creditLimit: 0, paymentDays: 0, status: 'ENABLED', remark: ''
+    supplierCode: '', supplierName: '', categoryId: '', contactName: '', contactPhone: '', email: '',
+    address: '', paymentDays: 0, status: 'ENABLED', remark: ''
   })
   dialogVisible.value = true
 }
@@ -163,8 +169,9 @@ function handleEdit(row: any) {
   dialogTitle.value = '编辑供应商'
   Object.assign(form, {
     supplierCode: row.supplierCode, supplierName: row.supplierName,
+    categoryId: row.categoryId || '',
     contactName: row.contactName, contactPhone: row.contactPhone, email: row.email,
-    address: row.address, creditLimit: row.creditLimit, paymentDays: row.paymentDays,
+    address: row.address, paymentDays: row.paymentDays,
     status: row.status, remark: row.remark
   })
   dialogVisible.value = true

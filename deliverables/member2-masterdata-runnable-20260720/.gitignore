@@ -1,0 +1,27 @@
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Java / Maven
+**/target/
+
+# Node / Vue
+**/node_modules/
+**/dist/
+*.tsbuildinfo
+
+# vue-tsc generated config artifacts
+erp-web/vite.config.js
+erp-web/vite.config.d.ts
+
+# Local secrets and environment overrides
+.env
+.env.*
+!.env.example
+application-local.yml
+
+# Logs and OS files
+*.log
+.DS_Store
+Thumbs.db

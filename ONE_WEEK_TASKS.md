@@ -7,6 +7,14 @@
 
 > 更细的表结构、接口、页面、每日任务和验收项见 [DETAILED_TASK_ASSIGNMENT.md](DETAILED_TASK_ASSIGNMENT.md)。
 
+五位成员可直接领取以下独立任务书：
+
+1. [成员 1：项目骨架、登录权限与系统设置](team-tasks/01-member-system-auth.md)
+2. [成员 2：商品、客户、供应商与仓库基础资料](team-tasks/02-member-master-data.md)
+3. [成员 3：销售单、客户收款与销售报表](team-tasks/03-member-sales.md)
+4. [成员 4：采购单、供应商付款与采购报表](team-tasks/04-member-purchase.md)
+5. [成员 5：采购入库、销售出库、库存、首页与部署](team-tasks/05-member-inventory-deploy.md)
+
 ## 1. 一周内要完成的范围
 
 ### 必做功能

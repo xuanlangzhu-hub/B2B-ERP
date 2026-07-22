@@ -32,9 +32,12 @@ team-tasks/   五名组员的详细任务单
 7. `sql/V7__master_data_core.sql`
 8. `sql/V8__master_data_metadata.sql`
 9. `sql/V9__system_permissions_and_demo.sql`
+10. `sql/V10__repair_admin_permissions.sql`
 
 本机开发默认连接 `127.0.0.1:3306/group_project`，默认本地账号为
-`erp_local / ErpLocal@2026`。首次搭建时需要创建数据库和用户，再依次执行上面的八个脚本。
+`erp_local / ErpLocal@2026`。首次搭建时需要创建数据库和用户，再依次执行上面的十个脚本。只执行 V1
+只能得到空表结构，注册后的账号将没有可分配的菜单权限；已有管理员出现“权限不足”或导航栏为空时，可在补齐
+V2 至 V9 后重跑 V10 修复权限关系。
 
 如果需要改为连接服务器 MySQL，并且服务器只允许 SSH 隧道访问，先建立本地端口转发：
 

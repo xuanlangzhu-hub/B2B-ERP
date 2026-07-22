@@ -35,9 +35,12 @@ sql/V5__inventory_operations.sql
 sql/V6__inventory_borrow.sql
 sql/V7__master_data_core.sql
 sql/V8__master_data_metadata.sql
+sql/V9__system_permissions_and_demo.sql
+sql/V10__repair_admin_permissions.sql
 ```
 
-演示数据脚本包含 `admin / Admin@123456`，部署后应立即修改演示密码。
+演示数据脚本包含 `admin / Admin@123456`，部署后应立即修改演示密码。只执行 V1 不会创建菜单和角色权限；
+已有管理员出现“权限不足”或导航栏为空时，补齐 V2 至 V9 后可重跑 V10 修复权限关系。
 
 ## 4. 构建产物
 

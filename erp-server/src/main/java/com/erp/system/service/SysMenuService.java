@@ -15,6 +15,9 @@ public class SysMenuService extends ServiceImpl<SysMenuMapper, SysMenu> {
     }
 
     public List<SysMenu> listUserMenus(List<String> permissions) {
+        if (permissions == null || permissions.isEmpty()) {
+            return List.of();
+        }
         if (permissions.contains("*:*:*")) {
             return lambdaQuery().eq(SysMenu::getVisible, 1)
                     .eq(SysMenu::getStatus, "ENABLED")

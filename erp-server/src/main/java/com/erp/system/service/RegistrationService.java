@@ -41,6 +41,12 @@ public class RegistrationService {
             throw new BusinessException("该邮箱已注册，请直接登录");
         }
 
+        List<SysMenu> menus = menuMapper.selectList(new LambdaQueryWrapper<SysMenu>()
+                .eq(SysMenu::getStatus, "ENABLED"));
+        if (menus.isEmpty()) {
+            throw new BusinessException("系统菜单尚未初始化，请先按顺序执行 sql/V1 至 V10 脚本");
+        }
+
         String suffix = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
                 + UUID.randomUUID().toString().substring(0, 4).toUpperCase(Locale.ROOT);
         OrgEnterprise enterprise = new OrgEnterprise()
@@ -106,8 +112,6 @@ public class RegistrationService {
         userRole.setRoleId(adminRole.getId());
         userRoleMapper.insert(userRole);
 
-        List<SysMenu> menus = menuMapper.selectList(new LambdaQueryWrapper<SysMenu>()
-                .eq(SysMenu::getStatus, "ENABLED"));
         for (SysMenu menu : menus) {
             SysRoleMenu relation = new SysRoleMenu();
             relation.setRoleId(adminRole.getId());

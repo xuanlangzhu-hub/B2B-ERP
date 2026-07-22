@@ -79,6 +79,18 @@ class RegistrationServiceTest {
         verify(userMapper, never()).insert(any(SysUser.class));
     }
 
+    @Test
+    void registerRejectsAnUninitializedMenuDatabaseBeforeWritingAnything() {
+        when(userMapper.selectCount(any())).thenReturn(0L);
+        when(menuMapper.selectList(any())).thenReturn(List.of());
+
+        BusinessException error = assertThrows(BusinessException.class, () -> service.register(request()));
+
+        assertTrue(error.getMessage().contains("菜单尚未初始化"));
+        verifyNoInteractions(enterpriseMapper, storeMapper, warehouseMapper, roleMapper);
+        verify(userMapper, never()).insert(any(SysUser.class));
+    }
+
     private RegisterRequest request() {
         RegisterRequest request = new RegisterRequest();
         request.setUsername(" Owner@Example.com ");

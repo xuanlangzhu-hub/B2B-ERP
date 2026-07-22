@@ -19,9 +19,10 @@
 
 ```text
 sql/V9__system_permissions_and_demo.sql
+sql/V10__repair_admin_permissions.sql
 ```
 
-脚本可重复执行，会创建通知阅读表，并补齐其他收支、企业信息、消息通知菜单与角色权限。
+脚本可重复执行：V9 创建通知阅读表并补齐新增业务菜单，V10 为已有 ADMIN 角色补齐全部启用菜单权限。
 
 ## 自动检查结果
 
